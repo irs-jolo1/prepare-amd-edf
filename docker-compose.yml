@@ -1,0 +1,21 @@
+services:
+  amd-edf:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+    container_name: amd-edf
+    hostname: amd-edf
+    stdin_open: true
+    tty: true
+    environment:
+      WORKSPACE: /workspace
+      MANIFEST_URL: https://github.com/Xilinx/yocto-manifests.git
+      MANIFEST_BRANCH: "refs/tags/amd-edf-rel-v26.06"
+    volumes:
+      - ./workspace:/workspace
+    working_dir: /workspace
+    command: ["/bin/bash"]
+
