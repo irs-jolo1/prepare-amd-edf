@@ -1,0 +1,2 @@
+[console_scripts]
+irsutils = irsutils.main:main

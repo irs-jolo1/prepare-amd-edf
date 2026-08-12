@@ -1,0 +1,14 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 5aa18b4..2696ae6 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -7,7 +7,7 @@ name = "uvicorn"
+ dynamic = ["version"]
+ description = "The lightning-fast ASGI server."
+ readme = "README.md"
+-license = "BSD-3-Clause"
++license = { text = "BSD-3-Clause" }
+ requires-python = ">=3.9"
+ authors = [
+     { name = "Tom Christie", email = "tom@tomchristie.com" },
+

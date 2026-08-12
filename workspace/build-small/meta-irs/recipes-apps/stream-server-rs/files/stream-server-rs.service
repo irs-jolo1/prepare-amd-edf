@@ -1,0 +1,42 @@
+[Unit]
+Description=Rust based IIO streaming server
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+
+ExecStart=/usr/bin/stream-server-rs
+
+Restart=on-failure
+RestartSec=5
+
+KillMode=control-group
+TimeoutStopSec=10
+
+# Uses real-time scheduler (SCHED_FIFO) instead of normal CFS scheduling
+CPUSchedulingPolicy=fifo
+
+# Real-time execution priority (1–99); higher value = higher CPU scheduling priority
+CPUSchedulingPriority=80
+
+# Standard Linux "nice" value for normal scheduler (ignored under real-time policy)
+Nice=-20
+
+# Assigns process to real-time I/O scheduling class (prioritizes disk/device I/O)
+IOSchedulingClass=realtime
+
+# Priority within real-time I/O class (0 is highest priority)
+IOSchedulingPriority=0
+
+# Maximum allowed real-time priority for this service (prevents system restriction)
+LimitRTPRIO=99
+
+# Allows full memory locking to avoid swapping and page faults
+LimitMEMLOCK=infinity
+
+# Optional CPU core binding to reduce scheduling jitter and cache misses
+# CPUAffinity=2 3
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=IRSUTILS healthcheck in CI mode
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 5
+ExecStart=/usr/bin/irsutils healthcheck --ci <token>
+Restart=never
+
+[Install]
+WantedBy=multi-user.target

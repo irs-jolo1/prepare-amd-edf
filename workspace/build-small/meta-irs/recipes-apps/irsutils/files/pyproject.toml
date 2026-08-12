@@ -1,0 +1,31 @@
+[project]
+name = "irsutils"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Joscha Loos", email = "joscha.loos@irs.systems" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.136.1",
+    "flask>=3.1.3",
+    "flask-cors>=6.0.2",
+    "flask-socketio>=5.6.1",
+    "pyadi-iio",
+    "requests>=2.33.0",
+    "uvicorn>=0.46.0",
+    "websocket-client>=1.8.0",
+]
+
+[project.scripts]
+irsutils = "irsutils.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv.sources]
+pyadi-iio = { path = "../../pyadi-iio/files" }
+
+[tool.uv]
+package = true

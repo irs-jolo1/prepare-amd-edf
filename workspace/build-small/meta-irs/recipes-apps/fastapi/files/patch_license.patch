@@ -1,0 +1,17 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 2290de71a..b7e2d978b 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -9,10 +9,7 @@ name = "fastapi"
+ dynamic = []
+ description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
+ readme = "README.md"
+-license = "MIT"
+-license-files = [
+-    "LICENSE",
+-]
++license = { text = "MIT" }
+ requires-python = ">=3.10"
+ authors = [
+     { name = "Sebastián Ramírez", email = "tiangolo@gmail.com" },
+
