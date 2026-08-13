@@ -4,7 +4,6 @@ IMAGE_INSTALL= "\
  base-files \
  base-passwd \
  busybox \
- sysvinit \
  initscripts \
  ${CORE_IMAGE_EXTRA_INSTALL} \
 "
