@@ -18,6 +18,7 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./workspace:/workspace
+      - /home/joscha/work/code/linux:/linux
     working_dir: /workspace
     command: ["/bin/bash"]
 

@@ -1,0 +1,117 @@
+/include/ "system-conf.dtsi"
+/* #include <dt-bindings/gpio/gpio.h> */
+
+
+// Parameters with # cause a syntax clash in the C preprocessor, therefore use own macros
+#define DT_ADDRESS_CELLS #address-cells = <1>;
+#define DT_SIZE_CELLS #size-cells = <0>;
+#define DT_TRG_SRC_CELLS #trigger-source-cells = <1>;
+#define DT_GPIO_CELLS #gpio-cells = <2>;
+
+// Define Template for an SPI Engine node
+// NOT ADDED: sync-in-gpios, reset-gpios
+#define SPI_ENGINE_INSTANCE(ADCNUM, AXIADDR, SPI_IRQ, ADC_IRQ)          \
+spi_engine_inst_##ADCNUM: axi_spi_engine@AXIADDR {                      \
+  clock-names = "s_axi_aclk", "spi_clk";                                \
+  clocks = <&zynqmp_clk 71>, <&misc_clk_0>;                             \
+  compatible = "adi,axi-spi-engine-1.00.a", "xlnx,axi-spi-engine-1.0";  \
+  interrupt-names = "irq";                                              \
+  interrupt-parent = <&axi_intc_0>;                                     \
+  interrupts = <SPI_IRQ IRQ_TYPE_LEVEL_HIGH>;                           \
+  reg = <0x0 0x##AXIADDR 0x0 0x10000>;                                  \
+  dmas = <&axi_ad77681_M_dma 0>;                                        \
+  dma-names = "offload0-rx";                                            \
+  trigger-sources = <&adc##ADCNUM 2>;                                   \
+  DT_ADDRESS_CELLS                                                      \
+  DT_SIZE_CELLS                                                         \
+  adc##ADCNUM: adaq7768_##ADCNUM@0 {                                    \
+    compatible = "adi,adaq7768-1";                                      \
+    reg = <0>;                                                          \
+    spi-max-frequency = <20000000>;                                     \
+    spi-cpol;                                                           \
+    spi-cpha;                                                           \
+    clocks = <&adaq7768_mclk>;                                          \
+    clock-names = "mclk";                                               \
+    vref-supply = <&adc_vref>;                                          \
+    interrupt-parent = <&gpio>;                                         \
+    interrupts = <ADC_IRQ IRQ_TYPE_EDGE_RISING>;                        \
+    gpio-controller;                                                    \
+    DT_GPIO_CELLS                                                       \
+    pga-gpios =                                                         \
+      <&adc##ADCNUM 0 GPIO_ACTIVE_HIGH>,                                \
+      <&adc##ADCNUM 1 GPIO_ACTIVE_HIGH>,                                \
+      <&adc##ADCNUM 2 GPIO_ACTIVE_HIGH>;                                \
+    DT_TRG_SRC_CELLS                                                    \
+  };                                                                    \
+};
+// End of macro definitions.
+
+
+// DEVICE NODES FOR ADC SPI ENGINE (irs-maed1)
+// Disable auto-generated node from pl.dtsi
+/* &spi_engine_array_1 { */
+/*   status = "disabled"; */
+/* }; */
+
+&amba_pl {
+  // Parameters: ADCNUM, AXIADDR, SPI_IRQ, ADC_IRQ
+  // Nodes 1 - 7.
+  SPI_ENGINE_INSTANCE(1, 80200000, 0, 85)
+  SPI_ENGINE_INSTANCE(2, 80210000, 1, 86)
+  SPI_ENGINE_INSTANCE(3, 80220000, 2, 87)
+  SPI_ENGINE_INSTANCE(4, 80230000, 3, 88)
+  SPI_ENGINE_INSTANCE(5, 80240000, 4, 89)
+  SPI_ENGINE_INSTANCE(6, 80250000, 5, 90)
+  SPI_ENGINE_INSTANCE(7, 80260000, 6, 91)
+};
+// end of node definition for ADC SPI Engines
+
+
+
+&axi_intc_0 {
+  compatible = "xlnx,xps-intc-1.00.a";
+};
+
+&adc_aggregator_0 {
+  compatible = "adc_aggregator";
+  dmas = <&axi_ad77681_M_dma 0>;
+  dma-names = "rx";
+
+  adi,adc-devices = <&adc1>, <&adc2>, <&adc3>, <&adc4>,
+                    <&adc5>, <&adc6>, <&adc7>;
+
+  irs,gpio-sampler = <&GPIO_Sample_Delay_0>;
+};
+
+/ {
+
+  // TODO: change to 2 500 000
+   adc_vref: regulator-5v0 {
+    compatible = "regulator-fixed";
+    regulator-name = "adc_vref";
+    regulator-min-microvolt = <4096000>;
+    regulator-max-microvolt = <4096000>;
+    regulator-always-on;
+  };
+
+  adaq7768_mclk: adaq7768_mclk {
+      compatible = "fixed-clock";
+      #clock-cells = <0>;
+      clock-frequency = <16384000>;
+      clock-output-names = "mclk";
+  };
+
+};
+
+&axi_ad77681_M_dma {
+  compatible = "adi,axi-dmac-1.00.a", "xlnx,axi-dmac-1.0";
+
+  #dma-cells = <1>;
+};
+
+&misc_clk_0 {
+    // both have to match the values from the Vivado design
+    clock-div = <10>;
+    clock-mult = <16>;
+};
+
