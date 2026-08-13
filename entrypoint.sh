@@ -15,6 +15,8 @@ fi
 
 repo sync
 
+pip3 install --break-system-packages -r "$WORKSPACE/sources/poky/bitbake/toaster-requirements.txt"
+
 BUILD_DIR="${BUILD_DIR:-build-small}"
 
 # Automatically source the Yocto/Xilinx SDK setup so bitbake is ready to use

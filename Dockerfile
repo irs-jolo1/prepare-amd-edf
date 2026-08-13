@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     locales \
     lz4 \
     python3 \
+    python3-pip \
     python3-yaml \
     tmux \
     wget \
