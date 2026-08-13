@@ -18,3 +18,9 @@
 /workspace/build-small/tmp-adaq7768-cortexa53-fsbl
 /workspace/build-small/tmp-adaq7768-microblaze-pmu
 /workspace/build-small/meta-irs/recipes-apps/stream-server-rs/files/stream-server-rs/target
+/workspace/build-small/.runbuilds.pid
+/workspace/build-small/.toastermain.pid
+/workspace/build-small/bitbake.lock
+/workspace/build-small/buildhistory
+/workspace/build-small/toaster_logs
+/workspace/toaster.sqlite
