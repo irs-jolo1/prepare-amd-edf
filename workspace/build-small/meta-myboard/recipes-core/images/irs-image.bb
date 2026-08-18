@@ -5,6 +5,7 @@ IMAGE_INSTALL= "\
  base-passwd \
  busybox \
  initscripts \
+ libiio-tests \
  ${CORE_IMAGE_EXTRA_INSTALL} \
 "
 

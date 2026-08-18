@@ -11,6 +11,26 @@
 - run `docker build -t amd-edf . && docker compose run --rm amd-edf bash`
 - You are now in the docker container. Everything EDF related is supposed to run in here, unless specified otherwise
 
+## File overview
+
+```
+workspace/
+├── conf/
+│   ├── machine # generated machine config
+│   └── local.conf # This is the file all docs are refering to
+└── meta-myboard/
+    ├── recipes-bsp/
+    │   ├── device-tree
+    │   └── u-boot
+    ├── recipes-core/
+    │   ├── busybox
+    │   └── images
+    └── recipes-kernel/
+        ├── linux
+        └── (fitimage)
+```
+
+
 ## Generate SDT and yocto machine config from .xsa
 
 - `stdgen` is istalled alongside Vivado/Vitis
@@ -27,7 +47,6 @@ sdtgen -xsa system.xsa -dir workspace/sdt/sdt
 ```
 gen-machine-conf parse-sdt \
     --hw-description <System Device-tree Directory> \
-    -l conf/local.conf \
     --machine-name <Name for your machine/board>
 ```
 
@@ -60,6 +79,9 @@ bitbake -u taskexp
 source toaster start webport=0.0.0.0:8000
 
 oe-pkgdata-util find-path /etc/inittab
+oe-pkgdata-util list-pkg-files libiio-utils
+
+bitbake -e libiio | grep ^PACKAGES= # find which packages are available by libiio
 
 gen-machine-conf --hw-description </path/to/xsa-file> --machine-name adaq7768 --output .. # then use generated MACHINE
 
