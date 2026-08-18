@@ -50,6 +50,36 @@ gen-machine-conf parse-sdt \
     --machine-name <Name for your machine/board>
 ```
 
+## Include Packages
+
+Edit the `IMAGE_INSTALL` variable in `irs-image.bb`
+
+```
+IMAGE_INSTALL= "\
+ base-files \
+ base-passwd \
+ busybox \
+ initscripts \
+ libiio-tests \
+ ${CORE_IMAGE_EXTRA_INSTALL} \
+"
+```
+
+
+## Add Kernel config
+
+- Edit Kernel config (like activating a kernel module), add it to `kconfig.cfg`
+- The value can either be `m` (module), `y` active, or `n` (disabled)
+
+```
+CONFIG_AD7768_1=m
+```
+
+## Build the image
+
+- `bitbake irs-image`
+- The image is defined in `meta-myboard/recipes-core/images/irs-image.bb`
+
 
 ## Other commands
 
