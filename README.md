@@ -1,7 +1,38 @@
+# AMD EDF based IRS Linux Distro
 
 - [link](https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/2824503297/Building+Linux+Images+Using+Yocto)
 - [yocto-xlnx](https://github.com/Xilinx/yocto-manifests.git)
 - [petalinux vs edf vs yocto](https://bltinc.com/2026/07/08/petalinux-vs-edf-vs-yocto/)
+
+## Getting Started
+
+- Clone this repo
+- Make sure your user is in the `docker group`
+- run `docker build -t amd-edf . && docker compose run --rm amd-edf bash`
+- You are now in the docker container. Everything EDF related is supposed to run in here, unless specified otherwise
+
+## Generate SDT and yocto machine config from .xsa
+
+- `stdgen` is istalled alongside Vivado/Vitis
+- Run `stdgen` to generate the SDT
+```
+sdtgen -xsa system.xsa -dir workspace/sdt/sdt
+```
+
+(It's important that the SDT is in `workspace/sdt/sdt`)
+
+- Next, parse the SDT to generate the machine config
+- `gen-machineconf` (old) and `gen-machine-conf` (new) are currently equivalent
+
+```
+gen-machine-conf parse-sdt \
+    --hw-description <System Device-tree Directory> \
+    -l conf/local.conf \
+    --machine-name <Name for your machine/board>
+```
+
+
+## Other commands
 
 ```
 docker build -t yocto-xlnx . && docker compose run --rm yocto-xlnx bash
@@ -21,8 +52,6 @@ bitbake-layers add-layer meta-myboard
 bitbake-layers show-layers
 bitbake virtual/kernel -c menuconfig
 yocto@yocto-xlnx:/workspace/build-small$ bitbake -e virtual/kernel | grep '^PREFERRED_PROVIDER_virtual/kernel'
-gen-machineconf --hw-description ../sdt/sdt --machine-name adaq7768 # then use generated MACHINE
-gen-machine-conf parse-sdt --hw-description <System Device-tree Directory> -c conf -l conf/local.conf --machine-name <Name for your machine/board>
 
 bitbake-layers show-appends | grep busybox-inittab
 bitbake-layers show-recipes busybox-inittab
@@ -31,6 +60,8 @@ bitbake -u taskexp
 source toaster start webport=0.0.0.0:8000
 
 oe-pkgdata-util find-path /etc/inittab
+
+gen-machine-conf --hw-description </path/to/xsa-file> --machine-name adaq7768 --output .. # then use generated MACHINE
 
 # recursively get where the variable MACHINE was set or changed
 # examples:

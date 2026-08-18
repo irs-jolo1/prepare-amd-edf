@@ -24,3 +24,5 @@
 /workspace/build-small/buildhistory
 /workspace/build-small/toaster_logs
 /workspace/toaster.sqlite
+/workspace/gen-machineconf.log
+/.Xil
