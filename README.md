@@ -61,6 +61,7 @@ IMAGE_INSTALL= "\
  busybox \
  initscripts \
  libiio-tests \
+ irsutils \
  ${CORE_IMAGE_EXTRA_INSTALL} \
 "
 ```
