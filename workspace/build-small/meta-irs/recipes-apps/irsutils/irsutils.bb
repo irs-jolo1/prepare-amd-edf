@@ -21,6 +21,7 @@ inherit python_setuptools_build_meta
 RDEPENDS:${PN} += "python3"
 RDEPENDS:${PN} += "python3-core"
 RDEPENDS:${PN} += "pyadi-iio"
+RDEPENDS:${PN} += "pylibiio"
 RDEPENDS:${PN} += "python3-numpy"
 RDEPENDS:${PN} += "fastapi (=0.116.1)"
 RDEPENDS:${PN} += "uvicorn"

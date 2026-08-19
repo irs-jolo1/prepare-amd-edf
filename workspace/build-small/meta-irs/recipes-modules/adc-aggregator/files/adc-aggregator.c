@@ -36,12 +36,6 @@
 #define ADC_AGGREGATOR_REG_IRQ_PENDING		0x84	/* word 0x21 */
 #define ADC_AGGREGATOR_REG_IRQ_SOURCE		0x88	/* word 0x22 */
 
-/* GPIO regmap register addresses (byte offsets: word_index × 4) */
-#define ADC_AGGREGATOR_GPIO_REG_DATA0		0x00	/* word 0x00: GPIO 00-31 */
-#define ADC_AGGREGATOR_GPIO_REG_DATA1		0x04	/* word 0x01: GPIO 32-63 */
-#define ADC_AGGREGATOR_GPIO_REG_DELAY_TICKS	0x08	/* word 0x02: delay ticks */
-#define ADC_AGGREGATOR_GPIO_REG_DELAY_RESOLUTION 0x0C	/* word 0x03: delay resolution */
-
 /* IRQ_SOURCE / IRQ_MASK / IRQ_PENDING bit definitions */
 #define ADC_AGGREGATOR_IRQ_ALMOST_FULL		BIT(0)	/* level: FIFO room < ALMOST_FULL_THRESHOLD (mirrors STATUS bit2); not latched */
 #define ADC_AGGREGATOR_IRQ_OVERFLOW		BIT(1)	/* sticky W1C: combined beat lost while FIFO full; mirrors STATUS.overflow_sticky (bit4) */
@@ -80,7 +74,6 @@
 #include <linux/spi/offload/types.h>
 #include <linux/spi/spi.h>
 #include <linux/of.h>
-#include <linux/of_address.h>
 #include <linux/log2.h>
 #include <linux/iio/buffer_impl.h>
 #include <linux/iio/iio.h>
@@ -115,8 +108,6 @@ struct adc_aggregator_state {
   struct completion completion_flush;
   struct completion completion_reset;
   int irq;
-
-  struct regmap *regmap_gpio;
 };
 
 static const struct iio_scan_type adc_aggregator_scan_type_offload = {
@@ -199,8 +190,6 @@ static const struct iio_chan_spec_ext_info adc_aggregator_ext_info[] = {
 	{ }
 };
 
-
-// ADC_AGGREGATOR regmap config
 static const struct regmap_range adc_aggregator_regmap_rd_ranges[] = {
 	regmap_reg_range(ADC_AGGREGATOR_REG_VERSION,  ADC_AGGREGATOR_REG_VERSION),   /* VERSION */
 	regmap_reg_range(ADC_AGGREGATOR_REG_SCRATCH,  ADC_AGGREGATOR_REG_SCRATCH),   /* SCRATCH */
@@ -224,6 +213,8 @@ static const struct regmap_access_table adc_aggregator_regmap_wr_table = {
 	.n_yes_ranges = ARRAY_SIZE(adc_aggregator_regmap_wr_ranges),
 };
 
+
+
 static const struct regmap_config adc_aggregator_regmap_config = {
 	.name = "adc-aggregator",
 	.reg_bits = 32,
@@ -237,36 +228,6 @@ static const struct regmap_config adc_aggregator_regmap_config = {
 	.fast_io = true,	/* MMIO: use spinlock, safe in hard-IRQ context */
 };
 
-// GPIO regmap config
-static const struct regmap_range adc_aggregator_regmap_gpio_rd_ranges[] = {
-	regmap_reg_range(ADC_AGGREGATOR_GPIO_REG_DATA0, ADC_AGGREGATOR_GPIO_REG_DATA1), /* DATA0, DATA1 */
-	regmap_reg_range(ADC_AGGREGATOR_GPIO_REG_DELAY_TICKS, ADC_AGGREGATOR_GPIO_REG_DELAY_RESOLUTION), /* DELAY_TICKS, DELAY_RESOLUTION */
-};
-
-static const struct regmap_access_table adc_aggregator_regmap_gpio_rd_table = {
-	.yes_ranges = adc_aggregator_regmap_gpio_rd_ranges,
-	.n_yes_ranges = ARRAY_SIZE(adc_aggregator_regmap_gpio_rd_ranges),
-};
-
-static const struct regmap_range adc_aggregator_regmap_gpio_wr_ranges[] = {
-	regmap_reg_range(ADC_AGGREGATOR_GPIO_REG_DELAY_TICKS, ADC_AGGREGATOR_GPIO_REG_DELAY_RESOLUTION), /* DELAY_TICKS, DELAY_RESOLUTION */
-};
-
-static const struct regmap_access_table adc_aggregator_regmap_gpio_wr_table = {
-	.yes_ranges = adc_aggregator_regmap_gpio_wr_ranges,
-	.n_yes_ranges = ARRAY_SIZE(adc_aggregator_regmap_gpio_wr_ranges),
-};
-static const struct regmap_config adc_aggregator_regmap_gpio_config = {
-	.name = "adc-aggregator_gpio",
-	.reg_bits = 32,
-	.reg_stride = 4,
-	.val_bits = 32,
-	.rd_table = &adc_aggregator_regmap_gpio_rd_table,
-	.wr_table = &adc_aggregator_regmap_gpio_wr_table,
-	.use_single_write = true,
-	.use_single_read = true,
-	.fast_io = true,	/* MMIO: use spinlock, safe in hard-IRQ context */
-};
 
 static int adc_aggregator_probe_channels(struct iio_dev *indio_dev)
 {
@@ -428,54 +389,11 @@ static int adc_aggregator_write_raw(struct iio_dev *indio_dev,
   return 0;
 }
 
-static ssize_t gpio_data0_show(struct device *dev,
-				struct device_attribute *attr, char *buf)
-{
-	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
-	struct adc_aggregator_state *st = iio_priv(indio_dev);
-	unsigned int val;
-	int ret;
-
-	ret = regmap_read(st->regmap_gpio, ADC_AGGREGATOR_GPIO_REG_DATA0, &val);
-	if (ret)
-		return ret;
-
-	return sysfs_emit(buf, "0x%08x\n", val);
-}
-static DEVICE_ATTR_RO(gpio_data0);
-
-static ssize_t gpio_data1_show(struct device *dev,
-				struct device_attribute *attr, char *buf)
-{
-	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
-	struct adc_aggregator_state *st = iio_priv(indio_dev);
-	unsigned int val;
-	int ret;
-
-	ret = regmap_read(st->regmap_gpio, ADC_AGGREGATOR_GPIO_REG_DATA1, &val);
-	if (ret)
-		return ret;
-
-	return sysfs_emit(buf, "0x%08x\n", val);
-}
-static DEVICE_ATTR_RO(gpio_data1);
-
-static struct attribute *adc_aggregator_gpio_attrs[] = {
-	&dev_attr_gpio_data0.attr,
-	&dev_attr_gpio_data1.attr,
-	NULL
-};
-
-static const struct attribute_group adc_aggregator_gpio_attr_group = {
-	.attrs = adc_aggregator_gpio_attrs,
-};
-
 static const struct iio_info adc_aggregator_info = {
   .read_raw = &adc_aggregator_read_raw,
   .read_avail = &adc_aggregator_read_avail,
   .write_raw = &adc_aggregator_write_raw,
   .write_raw_get_fmt = &adc_aggregator_write_raw_get_fmt,
-  .attrs = &adc_aggregator_gpio_attr_group,
   /* .read_label = ad7768_multi_read_label, */
   /* .get_current_scan_type = &ad7768_multi_get_current_scan_type, */
   /* .debugfs_reg_access = &ad7768_multi_reg_access, */
@@ -745,7 +663,6 @@ static int adc_aggregator_offload_probe(struct iio_dev *indio_dev,
 	return 0;
 }
 
-// init ADC_AGGREGATOR regmap
 static int adc_aggregator_init_regmap(struct platform_device *pdev, struct adc_aggregator_state *st)
 {
 	struct device *dev = st->dev;
@@ -796,7 +713,6 @@ static int adc_aggregator_init_regmap(struct platform_device *pdev, struct adc_a
 	if (ret)
 		return dev_err_probe(dev, ret, "CHANNEL_CONFIG read failed\n");
 
-
 	{
 		unsigned int num_ch = FIELD_GET(ADC_AGGREGATOR_CHANNEL_CONFIG_NUM_CH_MASK, val);
 
@@ -808,40 +724,6 @@ static int adc_aggregator_init_regmap(struct platform_device *pdev, struct adc_a
 
 	return 0;
 }
-
-
-// init GPIO regmap
-static int adc_aggregator_init_regmap_gpio(struct platform_device *pdev, struct adc_aggregator_state *st)
-{
-	struct device *dev = st->dev;
-	struct device_node *gpio_np;
-	struct resource res;
-	void __iomem *base;
-	int ret;
-
-	gpio_np = of_parse_phandle(dev->of_node, "irs,gpio-sampler", 0);
-	if (!gpio_np)
-		return dev_err_probe(dev, -ENODEV,
-				     "missing 'irs,gpio-sampler' phandle\n");
-
-	ret = of_address_to_resource(gpio_np, 0, &res);
-	of_node_put(gpio_np);
-	if (ret)
-		return dev_err_probe(dev, ret,
-				     "failed to get 'irs,gpio-sampler' reg\n");
-
-	base = devm_ioremap_resource(dev, &res);
-	if (IS_ERR(base))
-		return PTR_ERR(base);
-
-	st->regmap_gpio = devm_regmap_init_mmio(dev, base, &adc_aggregator_regmap_gpio_config);
-	if (IS_ERR(st->regmap_gpio))
-		return PTR_ERR(st->regmap_gpio);
-
-	return 0;
-}
-
-
 
 static int adc_aggregator_probe(struct platform_device *pdev)
 {
@@ -874,10 +756,6 @@ static int adc_aggregator_probe(struct platform_device *pdev)
     return ret;
 
   ret = adc_aggregator_init_regmap(pdev, st);
-  if (ret)
-    return ret;
-
-  ret = adc_aggregator_init_regmap_gpio(pdev, st);
   if (ret)
     return ret;
 

@@ -10,6 +10,13 @@ IMAGE_INSTALL= "\
  initscripts \
  kernel-modules \
  libiio-tests \
+ buildtime \
+ homedir \
+ dhcp \
+ dns \
+ adc-aggregator \
+ irsutils \
+ stream-server-rs \
  ${CORE_IMAGE_EXTRA_INSTALL} \
 "
 
@@ -20,6 +27,11 @@ LICENSE = "MIT"
 inherit core-image
 
 IMAGE_ROOTFS_SIZE ?= "8192"
+
+# move root users homedir to /root
+EXTRA_USERS_PARAMS = "\
+usermod -d /root root; \
+"
 
 # replace systemd with sysvinit
 # DISTRO_FEATURES:append = " sysvinit"

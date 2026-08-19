@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     file \
     gawk \
     git \
+    libiio-dev \
     libx11-6 \
     locales \
     lz4 \
