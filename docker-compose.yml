@@ -18,7 +18,8 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./workspace:/workspace
-      - /home/joscha/work/code/linux:/linux
+      # - /home/joscha/work/bitbake:/workspace/sources/poky/bitbake
+      - /home/joscha/work/code/linux_prod/linux_adaq7768_1:/linux
     working_dir: /workspace
     command: ["/bin/bash"]
 

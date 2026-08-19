@@ -81,6 +81,26 @@ CONFIG_AD7768_1=m
 - The image is defined in `meta-myboard/recipes-core/images/irs-image.bb`
 
 
+## Find Packages to install
+
+- Use the [OpenEmbedded layer index](https://layers.openembedded.org/layerindex/branch/scarthgap/recipes) to find recipes that might contain your desired package
+- Use `bitbake -e libiio | grep ^PACKAGES=` to find which exact packages are available by the recipe
+
+## Init manager
+
+- Instead of systemd, we use busybox
+- It reads from `/etc/inittab`
+- It also reads files in `/etc/init.d`, `/etc/rc*.d`
+
+
+## Where to put config
+
+- Everything global has to be in `.conf` (image, local, distro) files not `.bb` (recipes) files.
+- `machine.conf` is generated and should never be manually edited
+- `local.conf` primarily for local overrides (like tmp dir and sstate-cache)
+- `distro.conf` global configs
+- image `.bb` Packages installed into image, etc
+
 ## Other commands
 
 ```
@@ -125,6 +145,11 @@ bitbake-getvar PREFERRED_PROVIDER_virtual
 # todo
 load mmc 0:1 ${kernel_addr_r} Image-initramfs-<machine>.bin
 booti ${kernel_addr_r} - ${fdt_addr_r}
+
+dtc -I fs -O dts /proc/device-tree -o current.dts
+oelint-adv **/*.bb # https://pypi.org/project/oelint-adv/
+
+modprobe spi_axi_spi_engine
 ```
 
 with `bitbake -c menuconfig virtual/kernel`
