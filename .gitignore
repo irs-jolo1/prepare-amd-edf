@@ -13,7 +13,6 @@
 /workspace/build-small/conf/dts/adaq7768
 /workspace/build-small/hw-description
 /workspace/build-small/output
-/workspace/build-small/meta-myboard/recipes-kernel/linux
 /workspace/build-small/tmp
 /workspace/build-small/tmp-adaq7768-cortexa53-fsbl
 /workspace/build-small/tmp-adaq7768-microblaze-pmu
