@@ -66,6 +66,9 @@ IMAGE_INSTALL= "\
 "
 ```
 
+## U-Boot Config
+
+- Boots from fat partition (on SD-Card) from file `BOOT.BIN` (or `boot.bin`) (has to be named like this)
 
 ## Add Kernel config
 
@@ -74,13 +77,13 @@ IMAGE_INSTALL= "\
 
 ```
 CONFIG_AD7768_1=m
+CONFIG_ADC-AGGREGATOR=m
 ```
 
 ## Build the image
 
 - `bitbake irs-image`
 - The image is defined in `meta-myboard/recipes-core/images/irs-image.bb`
-
 
 ## Find Packages to install
 
@@ -178,10 +181,6 @@ gen-machineconf --hw-description ../sdt/sdt --machine-name adaq7768 # then use g
 
 - However, I am confused because the current version of this script is still based on xsct, so the error still appears, but the output is a system device
 
-
-## U-Boot
-
-- Boots from fat partition (on SDCARD) from file `BOOT.BIN` (has to be named like this)
 
 ### Commands
 

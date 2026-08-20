@@ -1,43 +1,39 @@
-DESCRIPTION = "Minimal console image"
-
-# kernel-modules loads/installs kernel-modules
-IMAGE_INSTALL= "\
- base-files \
- base-passwd \
- busybox \
- busybox-mdev \
- dtc \
- initscripts \
- kernel-modules \
- libiio-tests \
- buildtime \
- homedir \
- dhcp \
- dns \
- adc-aggregator \
- irsutils \
- stream-server-rs \
- ${CORE_IMAGE_EXTRA_INSTALL} \
-"
-
-IMAGE_LINGUAS = " "
-
+SUMMARY = "IRS base image"
+DESCRIPTION = "Special-purpose Linux for ADC measurements by IRS used for the FEP project"
+AUTHOR = "Joscha Loos (joscha.loos@irs.systems)"
 LICENSE = "MIT"
+CVE_PRODUCT = ""
 
 inherit core-image
 
-IMAGE_ROOTFS_SIZE ?= "8192"
-
-# move root users homedir to /root
-EXTRA_USERS_PARAMS = "\
-usermod -d /root root; \
+# kernel-modules loads/installs kernel-modules
+IMAGE_INSTALL = "\
+    base-files \
+    base-passwd \
+    busybox \
+    busybox-mdev \
+    dtc \
+    initscripts \
+    kernel-modules \
+    libiio-tests \
+    buildtime \
+    homedir \
+    dhcp \
+    dns \
+    adc-aggregator \
+    irsutils \
+    stream-server-rs \
+    ${CORE_IMAGE_EXTRA_INSTALL} \
 "
 
-# replace systemd with sysvinit
-# DISTRO_FEATURES:append = " sysvinit"
-# VIRTUAL-RUNTIME_init_manager = "sysvinit"
-# VIRTUAL-RUNTIME_initscripts = "initscripts"
+IMAGE_LINGUAS = ""
 
+IMAGE_ROOTFS_SIZE ?= "8192"
+
+# set root users homedir to /root
+EXTRA_USERS_PARAMS = "\
+    usermod -d /root root; \
+"
 
 # TODO
 # setenv bootargs "console=ttyPS0,115200 root=/dev/ram rw"
