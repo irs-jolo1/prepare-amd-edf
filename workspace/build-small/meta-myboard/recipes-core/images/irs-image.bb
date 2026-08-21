@@ -20,7 +20,6 @@ IMAGE_INSTALL = "\
     initscripts \
     irsutils \
     kernel-modules \
-    libiio-tests \
     stream-server-rs \
     ${CORE_IMAGE_EXTRA_INSTALL} \
 "

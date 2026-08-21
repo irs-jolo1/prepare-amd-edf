@@ -10,4 +10,5 @@ IMAGE_INSTALL:append = "\
     dtc \
     htop \
     opkg \
+    libiio-tests \
 "
