@@ -105,6 +105,12 @@ CONFIG_ADC-AGGREGATOR=m
 - `distro.conf` global configs
 - image `.bb` Packages installed into image, etc
 
+## Get all built packages with their version
+
+```
+cat tmp/deploy/images/*/irs-image-dev-*.manifest
+```
+
 ## Other commands
 
 ```
@@ -128,6 +134,7 @@ yocto@yocto-xlnx:/workspace/build-small$ bitbake -e virtual/kernel | grep '^PREF
 
 bitbake-layers show-appends | grep busybox-inittab
 bitbake-layers show-recipes busybox-inittab
+bitbake-layers show-appends recipes-core/images/irs-image.bb
 
 bitbake -u taskexp
 source toaster start webport=0.0.0.0:8000
@@ -135,7 +142,7 @@ source toaster start webport=0.0.0.0:8000
 oe-pkgdata-util find-path /etc/inittab
 oe-pkgdata-util list-pkg-files libiio-utils
 
-bitbake -e libiio | grep ^PACKAGES= # find which packages are available by libiio
+bitbake -e libiio | grep "^PACKAGES=" # find which packages are available by libiio
 
 gen-machine-conf --hw-description </path/to/xsa-file> --machine-name adaq7768 --output .. # then use generated MACHINE
 
@@ -145,6 +152,7 @@ bitbake-getvar -r virtual/kernel MACHINE
 bitbake-getvar MACHINE
 bitbake-getvar PV
 bitbake-getvar PREFERRED_PROVIDER_virtual
+bitbake -c listtasks u-boot-edf-src
 
 # todo
 load mmc 0:1 ${kernel_addr_r} Image-initramfs-<machine>.bin
