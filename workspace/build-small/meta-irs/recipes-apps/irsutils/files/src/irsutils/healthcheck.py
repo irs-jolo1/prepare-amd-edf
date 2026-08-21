@@ -92,19 +92,39 @@ def check_iio_info() -> None:
 
 @check
 def check_irsutils_backend() -> None:
-    """Verify that the stream-server-rs systemd service is active."""
+    """Verify that the stream-server-rs process is running."""
+    process_name = "stream-server-rs"
     try:
         result = subprocess.run(
-            ["systemctl", "is-active", "--quiet", "stream-server-rs.service"],
+            ["ps"],
+            capture_output=True,
+            text=True,
             timeout=10,
         )
     except FileNotFoundError:
-        raise RuntimeError("systemctl binary not found")
+        raise RuntimeError("ps binary not found")
     except subprocess.TimeoutExpired:
-        raise RuntimeError("systemctl is-active timed out")
-    assert result.returncode == 0, "The streaming server is not running"
+        raise RuntimeError("ps timed out")
 
-    print("The streaming server service is active")
+    assert result.returncode == 0, f"ps failed: {result.stderr.strip()}"
+
+    # busybox ps output columns are: PID USER VSZ STAT COMMAND
+    # The COMMAND column is the last field and may include arguments.
+    running = False
+    for line in result.stdout.splitlines()[1:]:
+        parts = line.split(None, 4)
+        if len(parts) < 5:
+            continue
+        command = parts[4]
+        # First token of COMMAND is the executable (possibly a path).
+        exe = command.split()[0].rsplit("/", 1)[-1]
+        if exe == process_name:
+            running = True
+            break
+
+    assert running, f"The streaming server ({process_name}) is not running"
+
+    print(f"The streaming server ({process_name}) is running")
 
 @check
 def check_enabled_modules() -> None:
