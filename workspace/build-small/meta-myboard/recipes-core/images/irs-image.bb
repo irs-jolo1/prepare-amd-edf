@@ -8,20 +8,19 @@ inherit core-image
 
 # kernel-modules loads/installs kernel-modules
 IMAGE_INSTALL = "\
+    adc-aggregator \
     base-files \
     base-passwd \
+    buildtime \
     busybox \
     busybox-mdev \
-    dtc \
-    initscripts \
-    kernel-modules \
-    libiio-tests \
-    buildtime \
-    homedir \
     dhcp \
     dns \
-    adc-aggregator \
+    homedir \
+    initscripts \
     irsutils \
+    kernel-modules \
+    libiio-tests \
     stream-server-rs \
     ${CORE_IMAGE_EXTRA_INSTALL} \
 "

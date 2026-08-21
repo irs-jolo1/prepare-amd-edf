@@ -13,6 +13,7 @@ do_install() {
     cat >> ${D}${sysconfdir}/inittab <<EOF
 
 
+::respawn:/usr/bin/stream-server-rs
 
 ttyPS0::respawn:/sbin/getty -n -l ${sysconfdir}/autologin -L 115200 ttyPS0
 EOF
