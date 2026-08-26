@@ -236,3 +236,12 @@ also:
 CONFIG_DEVTMPFS=y
 CONFIG_DEVTMPFS_MOUNT=y
 ```
+
+
+
+## Secure Boot
+
+- Hash-Value for u-boot, linux, etc
+- firewall
+- Rollback-Protection (downgrade protection)
+- Encryption to protect our knowledge
