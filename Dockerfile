@@ -46,6 +46,11 @@ RUN curl -sSLo /tmp/libtinfo5.deb \
 RUN curl -o /usr/local/bin/repo https://storage.googleapis.com/git-repo-downloads/repo \
     && chmod a+x /usr/local/bin/repo
 
+# bb: thin bitbake wrapper that pretty-prints long variable dumps
+# (RDEPENDS, ...) for humans. See scripts/bb.py.
+COPY scripts/bb.py /usr/local/bin/bb
+RUN chmod a+x /usr/local/bin/bb
+
 ARG USER_UID=1000
 ARG USER_GID=1000
 
