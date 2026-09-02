@@ -196,6 +196,11 @@ bitbake -c listtasks u-boot-edf-src
 
 `gzip -dc irs-image-adaq7768.rootfs.cpio.gz | cpio -idmv`
 
+## Signed Boot process in UBOOT
+
+- Enable FitImages
+- Use uboot-sign class (requires fitimage class)
+
 ## Other commands
 
 ```

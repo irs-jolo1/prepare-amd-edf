@@ -1,0 +1,52 @@
+## Loading kernel from FIT Image at 10000000 ...
+   Using 'conf-system-top.dtb' configuration
+   Trying 'kernel-1' kernel subimage
+     Description:  Linux kernel
+     Created:      2026-07-22  11:51:29 UTC
+     Type:         Kernel Image
+     Compression:  gzip compressed
+     Data Start:   0x100000fc
+     Data Size:    12377167 Bytes = 11.8 MiB
+     Architecture: AArch64
+     OS:           Linux
+     Load Address: 0x00200000
+     Entry Point:  0x00200000
+     Hash algo:    sha256
+     Hash value:   c6e7aed05fe1c1364c6ffaf3e5ecc839e12da1c8b87886481b65e9b53095ee43
+   Verifying Hash Integrity ... sha256+ OK
+## Loading ramdisk from FIT Image at 10000000 ...
+   Using 'conf-system-top.dtb' configuration
+   Trying 'ramdisk-1' ramdisk subimage
+     Description:  petalinux-image-minimal
+     Created:      2026-07-22  11:51:29 UTC
+     Type:         RAMDisk Image
+     Compression:  uncompressed
+     Data Start:   0x10bd9d78
+     Data Size:    66674100 Bytes = 63.6 MiB
+     Architecture: AArch64
+     OS:           Linux
+     Load Address: unavailable
+     Entry Point:  unavailable
+     Hash algo:    sha256
+     Hash value:   4681fee6e0afdd4c3579ce15d437ec3e9b515a3deead5b67b17e616cad358fa8
+   Verifying Hash Integrity ... sha256+ OK
+## Loading fdt from FIT Image at 10000000 ...
+   Using 'conf-system-top.dtb' configuration
+   Trying 'fdt-system-top.dtb' fdt subimage
+     Description:  Flattened Device Tree blob
+     Created:      2026-07-22  11:51:29 UTC
+     Type:         Flat Device Tree
+     Compression:  uncompressed
+     Data Start:   0x10bcde5c
+     Data Size:    48714 Bytes = 47.6 KiB
+     Architecture: AArch64
+     Hash algo:    sha256
+     Hash value:   19c42280f0d7714a589e30b7c18ec6476b442f4b74e0df3a4e2042763cfff611
+   Verifying Hash Integrity ... sha256+ OK
+   Booting using the fdt blob at 0x10bcde5c
+Working FDT set to 10bcde5c
+   Uncompressing Kernel Image to 200000
+   Loading Ramdisk to 73d3e000, end 77cd3db4 ... OK
+   Loading Device Tree to 0000000073d2f000, end 0000000073d3de49 ... OK
+Working FDT set to 73d2f000
+No RNG device

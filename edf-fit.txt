@@ -1,0 +1,38 @@
+ZynqMP> fatload mmc 1:1 ${kernel_addr_r} fitImage.bin
+14597543 bytes read in 952 ms (14.6 MiB/s)
+ZynqMP> bootm ${kernel_addr_r}
+## Loading kernel (any) from FIT Image at 18000000 ...
+   Using 'conf-cortexa53-linux.dtb' configuration
+   Trying 'kernel-1' kernel subimage
+     Description:  Linux kernel
+     Created:      2026-09-02  12:07:53 UTC
+     Type:         Kernel Image
+     Compression:  gzip compressed
+     Data Start:   0x180000e8
+     Data Size:    14520081 Bytes = 13.8 MiB
+     Architecture: AArch64
+     OS:           Linux
+     Load Address: 0x00200000
+     Entry Point:  0x00200000
+     Hash algo:    sha256
+     Hash value:   14015d9ce9bbd2f89449faa4ec9234d9bad249ea86e565d485de5b13494309e9
+   Verifying Hash Integrity ... sha256+ OK
+## Loading fdt (any) from FIT Image at 18000000 ...
+   Using 'conf-cortexa53-linux.dtb' configuration
+   Trying 'fdt-cortexa53-linux.dtb' fdt subimage
+     Description:  Flattened Device Tree blob
+     Created:      2026-09-02  12:07:53 UTC
+     Type:         Flat Device Tree
+     Compression:  uncompressed
+     Data Start:   0x18dd9110
+     Data Size:    76144 Bytes = 74.4 KiB
+     Architecture: AArch64
+     Hash algo:    sha256
+     Hash value:   79693b342343252848cd9b344c4f02727873607d1582261da1ac8d082ffa906d
+   Verifying Hash Integrity ... sha256+ OK
+   Booting using the fdt blob at 0x18dd9110
+Working FDT set to 18dd9110
+   Uncompressing Kernel Image to 200000
+   Loading Device Tree to 0000000077cae000, end 0000000077cc396f ... OK
+Working FDT set to 77cae000
+No RNG device

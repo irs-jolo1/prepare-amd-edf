@@ -13,7 +13,7 @@ if [ ! -d "$WORKSPACE/.repo" ]; then
     repo init -u "$MANIFEST_URL" -b "$MANIFEST_BRANCH" -m default-edf.xml
 fi
 
-repo sync
+# repo sync
 
 pip3 install --break-system-packages -r "$WORKSPACE/sources/poky/bitbake/toaster-requirements.txt"
 
