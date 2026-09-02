@@ -4,18 +4,11 @@ AUTHOR = "Joscha Loos (joscha.loos@irs.systems)"
 LICENSE = "MIT"
 CVE_PRODUCT = ""
 
-# This is the real rootfs, embedded directly into the kernel fitImage as a
-# native FIT "ramdisk" component (see irs-distro.conf: INITRAMFS_IMAGE =
-# "irs-image", INITRAMFS_IMAGE_BUNDLE = "0"). U-Boot loads the whole
-# fitImage with a single `bootm`; the kernel's classic rd_load_image
-# mechanism copies the embedded ramdisk into /dev/ram0 and mounts it
-# directly as / (root=/dev/ram0 bootarg, see edf-linux-boot.cmd).
-#
-# ext4 (rather than cpio.gz) is used because it needs to be mountable as a
-# normal block filesystem on /dev/ram0 - a cpio archive is not a mountable
-# fs. FIT_SUPPORTED_INITRAMFS_FSTYPES in irs-distro.conf is set to "ext4"
-# to match.
-IMAGE_FSTYPES = "ext4"
+# Journaling and reserved-root-blocks only matter for persistent storage
+# that survives power loss / needs crash recovery, or supports growing
+# free space over time. This is a RAM disk, rebuilt from scratch on every
+# boot - both are pure overhead here.
+EXTRA_IMAGECMD:ext4 = "-i 4096 -O ^has_journal -m 0"
 
 # kernel-fitimage.bbclass looks for ${INITRAMFS_IMAGE}${IMAGE_MACHINE_SUFFIX}.ext4
 # in DEPLOY_DIR_IMAGE (see FIT_SUPPORTED_INITRAMFS_FSTYPES), i.e. WITHOUT the
@@ -62,8 +55,13 @@ IMAGE_INSTALL = "\
 
 IMAGE_LINGUAS = ""
 
-IMAGE_ROOTFS_SIZE ?= "204800"
-IMAGE_ROOTFS_EXTRA_SPACE = "20480"
+# These act as a FLOOR, not a fixed size: get_rootfs_size() in
+# image.bbclass uses max(actual_content_size * IMAGE_OVERHEAD_FACTOR,
+# IMAGE_ROOTFS_SIZE) + IMAGE_ROOTFS_EXTRA_SPACE. Keep these small - this is
+# a RAM disk, not growable storage, so there's no need to pad it beyond a
+# small safety margin for future package growth.
+IMAGE_ROOTFS_SIZE ?= "8192"
+IMAGE_ROOTFS_EXTRA_SPACE = "8192"
 
 # Must match (or be smaller than) CONFIG_BLK_DEV_RAM_SIZE (in KiB) in
 # meta-myboard/recipes-kernel/linux/files/xilinx_defconfig, and the
