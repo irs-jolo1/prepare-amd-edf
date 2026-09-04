@@ -25,3 +25,5 @@
 /workspace/toaster.sqlite
 /workspace/gen-machineconf.log
 /.Xil
+/adaq7768_eval.xsa
+/workspace/output/adaq7768/gen-machineconf.log

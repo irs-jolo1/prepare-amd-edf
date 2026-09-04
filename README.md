@@ -38,7 +38,7 @@ workspace/
 
 ## Generate SDT and yocto machine config from .xsa
 
-- `stdgen` is istalled alongside Vivado/Vitis
+- `stdgen` is istalled alongside Vivado/Vitis (should be available after `source /path/to/Vivado/settings64.sh`)
 - Run `stdgen` to generate the SDT
 ```
 sdtgen -xsa system.xsa -dir workspace/sdt/sdt
@@ -48,6 +48,7 @@ sdtgen -xsa system.xsa -dir workspace/sdt/sdt
 
 - Next, parse the SDT to generate the machine config
 - `gen-machineconf` (old) and `gen-machine-conf` (new) are currently equivalent
+- Should be available in the edf docker container
 
 ```
 gen-machine-conf parse-sdt \
