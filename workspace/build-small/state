@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+"""state - extract selected variables from `bitbake -e` output, grouped by category.
+
+Usage:
+    state <recipe-or-target>
+    state --history <var> <recipe-or-target>
+
+Example:
+    state virtual/kernel
+    state --history IMAGE_BOOT_FILES virtual/kernel
+"""
+
+import argparse
+import os
+import re
+import subprocess
+import sys
+from collections import OrderedDict
+
+# Variables to extract, grouped by category. "Important" holds the vars
+# originally requested and is always shown first. The "Providers" category
+# is special-cased: any PREFERRED_PROVIDER_* found in the bitbake output that
+# isn't listed elsewhere is appended automatically. For every
+# PREFERRED_PROVIDER_* var (wherever it's listed), the resolved
+# PREFERRED_VERSION_<provider> for the currently selected recipe is inserted
+# right after it.
+CATEGORIES = OrderedDict(
+    [
+        (
+            "Important",
+            [
+                "PREFERRED_PROVIDER_virtual/kernel",
+                "PREFERRED_PROVIDER_virtual/bootloader",
+                "PREFERRED_PROVIDER_virtual/dtb",
+                "INIT_MANAGER",
+                "KERNEL_IMAGETYPE",
+                "KERNEL_IMAGETYPES",
+                "KERNEL_CLASSES",
+                "INITRAMFS_IMAGE",
+                "INITRAMFS_IMAGE_BUNDLE",
+                "FIT_SUPPORTED_INITRAMFS_FSTYPES",
+                "INITRAMFS_MAXSIZE",
+            ],
+        ),
+        (
+            "Providers",
+            [
+            ],
+        ),
+        (
+            "FIT Image",
+            [
+                "FIT_DESC",
+                "FIT_KERNEL_COMP_ALG",
+                "FIT_KERNEL_COMP_ALG_EXTENSION",
+                "FIT_ADDRESS_CELLS",
+                "UBOOT_FITIMAGE_ENABLE",
+                "UBOOT_DTB_BINARY",
+                "UBOOT_DTB_LOADADDRESS",
+                "EXTERNAL_KERNEL_DEVICETREE",
+                "FIT_GENERATE_KEYS",
+                "FIT_SIGN_INDIVIDUAL",
+                "FIT_HASH_ALG",
+                "FIT_SIGN_ALG",
+                "FIT_KEY_GENRSA_ARGS",
+                "FIT_KEY_SIGN_PKCS",
+                "FIT_SIGN_NUMBITS",
+                "UBOOT_SIGN_ENABLE",
+                "UBOOT_SIGN_KEYNAME",
+                "UBOOT_SIGN_KEYDIR",
+                "SPL_SIGN_ENABLE",
+                "SPL_SIGN_KEYNAME",
+            ],
+        ),
+        (
+            "Kernel",
+            [
+                "KERNEL_DEVICETREE",
+            ],
+        ),
+        (
+            "Bootloader",
+            [
+                "UBOOT_MACHINE",
+                "UBOOT_CONFIG",
+                "SPL_BINARY",
+            ],
+        ),
+        (
+            "Image",
+            [
+                "IMAGE_FEATURES",
+                "IMAGE_FSTYPES",
+                "IMAGE_INSTALL",
+                "IMAGE_BOOT_FILES",
+                "PACKAGE_CLASSES",
+                "IMAGE_ROOTFS_EXTRA_SPACE",
+                "IMAGE_OVERHEAD_FACTOR",
+            ],
+        ),
+        (
+            "Distro",
+            [
+                "DISTRO",
+                "DISTRO_NAME",
+                "DISTRO_VERSION",
+                "DISTRO_FEATURES",
+                "DISTRO_FEATURES_BACKFILL",
+                "DISTRO_FEATURES_BACKFILL_CONSIDERED",
+                "MACHINE_FEATURES",
+                "SERIAL_CONSOLES",
+                "TCLIBC",
+            ],
+        ),
+    ]
+)
+
+PROVIDER_PREFIX = "PREFERRED_PROVIDER_"
+
+# Vars whose value is a free-text string rather than a space-separated list,
+# even though it may contain spaces. These are always printed as a plain
+# quoted string instead of being pretty-printed as a list.
+STRING_VARS = {
+    "FIT_DESC",
+}
+
+# ANSI color codes. Disabled automatically when stdout is not a TTY or when
+# NO_COLOR is set (see use_color()).
+COLOR_RESET = "\033[0m"
+COLOR_HEADER = "\033[1;35m"  # bold magenta - category header
+COLOR_NAME = "\033[1;36m"  # bold cyan - variable name
+COLOR_EMPTY = "\033[33m"  # yellow - flag empty/unset-looking values
+COLOR_DIM = "\033[2m"  # dim - history entries
+
+
+def use_color() -> bool:
+    if os.environ.get("NO_COLOR"):
+        return False
+    return sys.stdout.isatty()
+
+
+def run_bitbake_e(target: str) -> str:
+    """Run `bitbake -e <target>` and capture all output."""
+    result = subprocess.run(
+        ["bitbake", "-e", target],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=True,
+    )
+    return result.stdout
+
+
+def parse_vars(output: str) -> dict:
+    """Parse `bitbake -e` output into a dict of VAR -> raw line (VAR="value")."""
+    values = {}
+    pattern = re.compile(r'^([A-Za-z_][A-Za-z0-9_./-]*)="(.*)"$')
+    for line in output.splitlines():
+        match = pattern.match(line)
+        if match:
+            values[match.group(1)] = match.group(2)
+    return values
+
+
+# bitbake -e emits a comment block above each variable's assignment line
+# showing where it was set/appended/overridden, e.g.:
+#
+#   #
+#   # $IMAGE_BOOT_FILES
+#   #   set /path/to/machine.conf:81
+#   #     "devicetree/..."
+#   #   set /path/to/other.conf:12 [_append]
+#   #     " extra.txt"
+#   IMAGE_BOOT_FILES="devicetree/... extra.txt"
+#
+_HISTORY_HEADER_RE = re.compile(r"^# \$(\S+)$")
+_HISTORY_SET_RE = re.compile(r"^#\s+(set\S*)\s+(.+)$")
+
+
+def parse_history(output: str) -> dict:
+    """Parse `bitbake -e` output into a dict of VAR -> list of "file:line"
+    (optionally with a "[flag]" suffix, e.g. append/prepend/override) entries
+    describing every place that set/modified the variable, in order."""
+    history: dict = {}
+    current_var = None
+    current_entries: list = []
+
+    def flush():
+        if current_var is not None:
+            history.setdefault(current_var, [])
+            history[current_var].extend(current_entries)
+
+    for line in output.splitlines():
+        match = _HISTORY_HEADER_RE.match(line)
+        if match:
+            flush()
+            current_var = match.group(1)
+            current_entries = []
+            continue
+
+        if current_var is not None:
+            if line.startswith("#"):
+                set_match = _HISTORY_SET_RE.match(line)
+                if set_match:
+                    current_entries.append(set_match.group(2).strip())
+                continue
+            else:
+                flush()
+                current_var = None
+                current_entries = []
+
+    flush()
+    return history
+
+
+def build_categories(values: dict) -> "OrderedDict[str, list]":
+    """Return a copy of CATEGORIES with:
+    - PREFERRED_VERSION_<provider> inserted right after each
+      PREFERRED_PROVIDER_* var, wherever it's listed, resolved to the
+      currently selected recipe.
+    - Any PREFERRED_PROVIDER_* found in the output that isn't listed in any
+      category appended (with its resolved version) to "Providers".
+    """
+    categories = OrderedDict()
+    for name, var_list in CATEGORIES.items():
+        expanded = []
+        for var in var_list:
+            expanded.append(var)
+            if var.startswith(PROVIDER_PREFIX):
+                provider = values.get(var)
+                if provider:
+                    version_var = f"PREFERRED_VERSION_{provider}"
+                    if version_var not in var_list:
+                        expanded.append(version_var)
+        categories[name] = expanded
+
+    known_providers = {
+        var
+        for var_list in categories.values()
+        for var in var_list
+        if var.startswith(PROVIDER_PREFIX)
+    }
+
+    all_providers = sorted(k for k in values if k.startswith(PROVIDER_PREFIX))
+    providers_cat = categories.setdefault("Providers", [])
+    for provider_var in all_providers:
+        if provider_var in known_providers:
+            continue
+        providers_cat.append(provider_var)
+        provider = values.get(provider_var)
+        if provider:
+            version_var = f"PREFERRED_VERSION_{provider}"
+            providers_cat.append(version_var)
+
+    return categories
+
+
+def print_var(var: str, value: str, color: bool) -> None:
+    tokens = value.split()
+    name_str = f"{COLOR_NAME}{var}{COLOR_RESET}" if color else var
+
+    if not tokens:
+        # Empty value.
+        empty_str = f'{COLOR_EMPTY}""{COLOR_RESET}' if color else '""'
+        print(f"  {name_str}={empty_str}")
+    elif len(tokens) > 1 and var not in STRING_VARS:
+        # Space-separated list: pretty-print one item per line.
+        print(f"  {name_str}=[")
+        for token in tokens:
+            print(f'    "{token}"')
+        print("  ]")
+    else:
+        print(f'  {name_str}="{value}"')
+
+
+def print_history(var: str, entries: list, color: bool) -> None:
+    name_str = f"{COLOR_NAME}{var}{COLOR_RESET}" if color else var
+    print(f"{name_str}:")
+    if not entries:
+        msg = "  (no history found - variable may be unset or history tracking is unavailable)"
+        print(f"{COLOR_DIM}{msg}{COLOR_RESET}" if color else msg)
+        return
+    for entry in entries:
+        line = f"  {entry}"
+        print(f"{COLOR_DIM}{line}{COLOR_RESET}" if color else line)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Extract selected variables from `bitbake -e` output, grouped by category.",
+    )
+    parser.add_argument(
+        "--history",
+        metavar="VAR",
+        help="instead of the categorized summary, show every file:line that "
+        "set/appended/overrode VAR (e.g. --history IMAGE_BOOT_FILES)",
+    )
+    parser.add_argument("target", help="recipe or target to pass to `bitbake -e`")
+    args = parser.parse_args()
+
+    output = run_bitbake_e(args.target)
+    color = use_color()
+
+    if args.history:
+        history = parse_history(output)
+        print_history(args.history, history.get(args.history, []), color)
+        return 0
+
+    values = parse_vars(output)
+    categories = build_categories(values)
+
+    for category, var_list in categories.items():
+        present_vars = [v for v in var_list if v in values]
+        if not present_vars:
+            continue
+        header = f"{COLOR_HEADER}{category}{COLOR_RESET}" if color else category
+        print(f"{header}:")
+        for var in present_vars:
+            print_var(var, values[var], color)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
