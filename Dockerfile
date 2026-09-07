@@ -46,6 +46,9 @@ RUN curl -sSLo /tmp/libtinfo5.deb \
 RUN curl -o /usr/local/bin/repo https://storage.googleapis.com/git-repo-downloads/repo \
     && chmod a+x /usr/local/bin/repo
 
+# Install uv (fast Python package installer used instead of pip in entrypoint.sh)
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
+
 # bb: thin bitbake wrapper that pretty-prints long variable dumps
 # (RDEPENDS, ...) for humans. See scripts/bb.py.
 COPY scripts/bb.py /usr/local/bin/bb

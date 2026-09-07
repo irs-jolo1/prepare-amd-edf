@@ -13,9 +13,14 @@ if [ ! -d "$WORKSPACE/.repo" ]; then
     repo init -u "$MANIFEST_URL" -b "$MANIFEST_BRANCH" -m default-edf.xml
 fi
 
-# repo sync
+VENV_DIR="$WORKSPACE/.venv"
+if [ ! -d "$VENV_DIR" ]; then
+    uv venv "$VENV_DIR"
+fi
 
-pip3 install --break-system-packages -r "$WORKSPACE/sources/poky/bitbake/toaster-requirements.txt"
+# shellcheck disable=SC1091
+source "$VENV_DIR/bin/activate"
+uv pip install -r "$WORKSPACE/sources/poky/bitbake/toaster-requirements.txt"
 
 BUILD_DIR="${BUILD_DIR:-build-small}"
 
@@ -31,5 +36,16 @@ if [ -f "$WORKSPACE/edf-init-build-env" ]; then
 else
     echo "Warning: $WORKSPACE/edf-init-build-env not found; skipping automatic environment setup." >&2
 fi
+
+echo
+echo "#######################################################"
+cat <<EOF
+Welcome to IRS EDF development container
+- To init or update EDF run: repo sync
+- To build production image run: bitbake irs-image
+- To build development image run: bitbake irs-image-dev
+EOF
+echo "#######################################################"
+echo
 
 exec "$@"
