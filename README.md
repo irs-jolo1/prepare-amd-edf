@@ -49,6 +49,7 @@ sdtgen -xsa system.xsa -dir workspace/sdt/sdt
 - Next, parse the SDT to generate the machine config
 - `gen-machineconf` (old) and `gen-machine-conf` (new) are currently equivalent
 - Should be available in the edf docker container
+- Run this in `workspace/build-small`
 
 ```
 gen-machine-conf parse-sdt \
@@ -61,6 +62,13 @@ gen-machine-conf parse-sdt \
     --hw-description sdt \
     --machine-name adaq7768
 ```
+
+
+#### SRC_URI entry file could not be found
+
+Once, I had the error that I could not generate the machine conf for adaq7768
+because some `SRC_URI` that already assumes that adaq7768 is already there could not found (because gen-machine-conf generates it)
+My solution was to comment all `SRC_URI` in `/workspace/sources/meta-xilinx/meta-xilinx-core/recipes-bsp/device-tree/device-tree.bb` (The path appeared in the error and might be different for you)
 
 ## Include Packages
 
