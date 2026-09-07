@@ -10,6 +10,7 @@
     pkgs.git-repo
     pkgs.ncurses5
     pkgs.tmux
+    pkgs.cargo-bitbake
   ];
 
   # https://devenv.sh/languages/
