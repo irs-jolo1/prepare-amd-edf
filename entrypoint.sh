@@ -14,13 +14,10 @@ if [ ! -d "$WORKSPACE/.repo" ]; then
 fi
 
 VENV_DIR="$WORKSPACE/.venv"
-if [ ! -d "$VENV_DIR" ]; then
-    uv venv "$VENV_DIR"
-fi
+uv sync --project "$WORKSPACE"
 
 # shellcheck disable=SC1091
 source "$VENV_DIR/bin/activate"
-uv pip install -r "$WORKSPACE/sources/poky/bitbake/toaster-requirements.txt"
 
 BUILD_DIR="${BUILD_DIR:-build-small}"
 
@@ -47,5 +44,7 @@ Welcome to IRS EDF development container
 EOF
 echo "#######################################################"
 echo
+
+alias bb=bitbake
 
 exec "$@"
