@@ -56,6 +56,12 @@ gen-machine-conf parse-sdt \
     --machine-name <Name for your machine/board>
 ```
 
+```
+gen-machine-conf parse-sdt \
+    --hw-description sdt \
+    --machine-name adaq7768
+```
+
 ## Include Packages
 
 Edit the `IMAGE_INSTALL` variable in `irs-image.bb`
