@@ -47,8 +47,8 @@ IMAGE_INSTALL = "\
     dns \
     homedir \
     initscripts \
-    irsutils \
     stream-server-rs \
+    irsutils \
     ${CORE_IMAGE_EXTRA_INSTALL} \
 "
 # kernel-modules
