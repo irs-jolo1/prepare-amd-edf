@@ -75,7 +75,10 @@ RUN chmod a+x /entrypoint.sh
 USER yocto
 
 # Simple colored prompt: bold green user@host, bold blue cwd.
-RUN echo "PS1='\[\033[1;32m\]\u@\h\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\]\$ '" >> /home/yocto/.bashrc
+RUN echo "PS1='[IRS-edf-env]:\[\033[1;34m\]\w\[\033[0m\]\$ '" >> /home/yocto/.bashrc
+
+# Give wget a custom user agent for crates.io
+RUN echo "user_agent = Mozilla/5.0 (X11; Linux x86_64) stream-server-rs-build" >> /home/yocto/.wgetrc
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
