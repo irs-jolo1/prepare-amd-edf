@@ -11,6 +11,8 @@
     pkgs.ncurses5
     pkgs.tmux
     pkgs.cargo-bitbake
+    pkgs.xilinx-bootgen
+    pkgs.mkbootimage
   ];
 
   # https://devenv.sh/languages/

@@ -211,7 +211,61 @@ bitbake -c listtasks u-boot-edf-src
 
 `gzip -dc irs-image-adaq7768.rootfs.cpio.gz | cpio -idmv`
 
-## Signed Boot process in UBOOT
+## Secure Boot
+
+### Signed FSBL
+
+- The boot.bin is generated from `meta-xilinx/meta-xilinx-core/recipes-bsp/bootbin`
+- The preferred provider (`PREFERRED_PROVIDER_virtual/boot-bin`) is set in the `machine-xilinx-default.inc` include (included in the machine config)
+    - use: `bitbake-getvar PREFERRED_PROVIDER_virtual/boot-bin` for more information
+
+- BOOT.BIN is generated using `bootgen` (package is called: `xilinx-bootgen`)
+    - This happens in `xilinx-bootgen.bb` (see above)
+
+
+#### Configure YOCTO to build the signed BOOT.BIN
+
+- ?
+
+
+https://git.yoctoproject.org/meta-xilinx/tree/meta-xilinx-core/recipes-bsp/bootbin/xilinx-bootbin.bb?h=scarthgap
+https://claude.ai/chat/22303618-43cb-4343-aa72-5d9ab91f6c44
+
+https://layers.openembedded.org/layerindex/recipe/405434/
+
+
+#### Manual commands
+
+- generate keys:
+
+```
+// gen_keys.bif
+generate_pem:
+{
+  [pskfile] psk0.pem
+  [sskfile] ssk0.pem
+}
+```
+`bootgen -arch zynqmp -image gen_keys.bif -generate_keys auth pem`
+
+The boo.bin config looks like this
+```
+// boot.bif
+the_ROM_image:
+{
+  [fsbl_config] bh_auth_enable
+  [auth_params] ppk_select=0; spk_id=0x00000000
+  [pskfile] psk0.pem
+  [sskfile] ssk0.pem
+  [bootloader, authentication=rsa, destination_cpu=a53-0] fsbl.elf
+  [pmufw_image] pmufw.elf
+  [destination_cpu=a53-0, exception_level=el-3, trustzone, authentication=rsa] bl31.elf
+  [destination_cpu=a53-0, exception_level=el-2, authentication=rsa] u-boot.elf
+}
+```
+`bootgen -arch zynqmp -image boot.bif -w -o BOOT.BIN`
+
+### Signed Boot process in UBOOT
 
 - Enable FitImages
 - Use uboot-sign class (requires fitimage class)
@@ -230,6 +284,8 @@ bitbake virtual/kernel -c menuconfig
 bitbake-layers show-appends | grep busybox-inittab
 bitbake-layers show-recipes busybox-inittab
 bitbake-layers show-appends recipes-core/images/irs-image.bb
+
+bitbake -g -u taskexp irs-image
 
 bitbake -u taskexp
 source toaster start webport=0.0.0.0:8000
